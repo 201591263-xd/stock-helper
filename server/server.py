@@ -794,7 +794,7 @@ def theme_get():
     theme = db.get_user_pref(username, 'theme') or '浅色主题'
     return jsonify({'ok': True, 'theme': theme})
 
-APP_VERSION = "4.0"
+APP_VERSION = "4.5"
 UPDATE_ZIP = os.path.join(os.path.dirname(__file__), "..", "推票助手_v4.zip")
 
 @app.route('/api/version', methods=['GET'])
