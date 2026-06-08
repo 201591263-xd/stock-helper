@@ -1,0 +1,8 @@
+﻿__pycache__/
+*.pyc
+build/
+dist/
+*.spec.bak
+stock_data.db
+*.log
+*_loaded.txt
