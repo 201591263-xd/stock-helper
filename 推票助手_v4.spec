@@ -8,7 +8,8 @@ a = Analysis(
     datas=[('server', 'server'), ('client', 'client')],
     hiddenimports=[
                    'client', 'client.api', 'client.dashboard', 'client.login', 'client.chat', 'client.styles',
-                   'flask', 'flask.json', 'flask_cors', 'requests', 'urllib3', 'charset_normalizer'],
+                   'flask', 'flask.json', 'flask_cors', 'requests', 'urllib3', 'charset_normalizer',
+                   'sqlite3', 'pandas'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

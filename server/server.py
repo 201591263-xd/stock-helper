@@ -10,7 +10,7 @@ print("===== MODULE SERVER LOADED V20260608-HC =====", flush=True)
 
 sys.path.insert(0, os.path.dirname(__file__))
 import db
-from ashare_quote import get_realtime_quote, get_batch_quotes, build_dynamic_pool
+from ashare_quote import get_realtime_quote, get_batch_quotes
 
 # 文件日志（exe 无控制台时的调试手段）
 _LOG_PATH = os.path.join(os.path.expanduser('~'), '推票助手_debug.log')
