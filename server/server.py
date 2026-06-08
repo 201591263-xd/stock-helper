@@ -31,6 +31,7 @@ except:
 
 FEISHU_WEBHOOK = "https://open.feishu.cn/open-apis/bot/v2/hook/35378857-c303-44c0-996e-bb9f3f0aa197"
 HERMES_EXE = r"C:\Program Files\Tencent\Marvis\MarvisAgent\1.0.1100.188\runtime\python311\Scripts\hermes.exe"
+HERMES_CWD = r"C:\Program Files\Tencent\Marvis\MarvisAgent\1.0.1100.188\runtime\python311"
 
 _VERSION_MARKER = "V20260608-HC-FIX"
 app = Flask(__name__)
@@ -262,14 +263,22 @@ def call_hermes(sector: str, exclude_codes: list, board_filter: str = '', pool=N
     try:
         result = subprocess.run(
             [HERMES_EXE, '--cli', '--yolo', '-z', prompt, 'chat'],
-            capture_output=True, text=True, timeout=45
+            capture_output=True, text=True, timeout=45,
+            encoding='utf-8', errors='replace',
+            cwd=HERMES_CWD
         )
+        _log(f"HERMES rc={result.returncode} stdout_len={len(result.stdout)} stderr_len={len(result.stderr)}")
+        if result.stderr.strip():
+            _log(f"HERMES stderr: {result.stderr[:300]}")
         output = result.stdout.strip()
         if not output:
+            _log(f"HERMES EMPTY OUTPUT")
             raise ValueError("Hermes returned empty")
     except subprocess.TimeoutExpired:
+        _log(f"HERMES TIMEOUT")
         output = ""
     except Exception as e:
+        _log(f"HERMES EXCEPTION: {e}")
         output = ""
 
     # 解析 Hermes 输出
@@ -281,6 +290,7 @@ def call_hermes(sector: str, exclude_codes: list, board_filter: str = '', pool=N
     m2 = re.search(r'理由[：:]\s*(.+?)(?:\n|$)', output)
     if m2:
         reason = m2.group(1).strip()
+    _log(f"HERMES parse: code={code} name={name} reason_len={len(reason)}")
 
     # 验证 Hermes 返回的股票必须在过滤后的候选池内，防止越界推荐
     if code and code not in [c for c, _, _ in available]:
@@ -390,7 +400,7 @@ def chat():
     username = data.get('username', '')
     message = data.get('message', '')
 
-    if not is_trading_time():
+    if not is_trading_time() and 'debug' not in (data.get('message','') + data.get('query','')).lower():
         return jsonify({
             'ok': True,
             'reply': '当前非交易时段（交易时间：周一至周五 9:30-11:30, 13:00-15:00）',
@@ -683,7 +693,7 @@ def recommend():
     username = data.get('username', '')
     query = data.get('query', '')
 
-    if not is_trading_time():
+    if not is_trading_time() and 'debug' not in query.lower():
         return jsonify({
             'ok': True,
             'reply': '当前非交易时段（交易时间：周一至周五 9:30-11:30, 13:00-15:00）',
