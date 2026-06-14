@@ -13,6 +13,17 @@ def get_conn():
     conn.row_factory = sqlite3.Row
     return conn
 
+from contextlib import contextmanager
+
+@contextmanager
+def db_conn():
+    """上下文管理器，确保连接正确关闭"""
+    conn = get_conn()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
 def init_db():
     conn = get_conn()
     c = conn.cursor()

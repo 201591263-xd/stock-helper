@@ -260,26 +260,27 @@ def call_hermes(sector: str, exclude_codes: list, board_filter: str = '', pool=N
 推荐: 股票代码 名称
 理由: xxx"""
 
-    try:
-        result = subprocess.run(
-            [HERMES_EXE, '--cli', '--yolo', '-z', prompt, 'chat'],
-            capture_output=True, text=True, timeout=45,
-            encoding='utf-8', errors='replace',
-            cwd=HERMES_CWD
-        )
-        _log(f"HERMES rc={result.returncode} stdout_len={len(result.stdout)} stderr_len={len(result.stderr)}")
-        if result.stderr.strip():
-            _log(f"HERMES stderr: {result.stderr[:300]}")
-        output = result.stdout.strip()
-        if not output:
-            _log(f"HERMES EMPTY OUTPUT")
-            raise ValueError("Hermes returned empty")
-    except subprocess.TimeoutExpired:
-        _log(f"HERMES TIMEOUT")
-        output = ""
-    except Exception as e:
-        _log(f"HERMES EXCEPTION: {e}")
-        output = ""
+    # 重试机制：最多3次，每次超时45s
+    output = ""
+    for attempt in range(3):
+        try:
+            result = subprocess.run(
+                [HERMES_EXE, '--cli', '--yolo', '-z', prompt, 'chat'],
+                capture_output=True, text=True, timeout=45,
+                encoding='utf-8', errors='replace',
+                cwd=HERMES_CWD
+            )
+            _log(f"HERMES attempt={attempt+1} rc={result.returncode} stdout_len={len(result.stdout)} stderr_len={len(result.stderr)}")
+            if result.stderr.strip():
+                _log(f"HERMES stderr: {result.stderr[:300]}")
+            output = result.stdout.strip()
+            if output:
+                break
+            _log(f"HERMES EMPTY OUTPUT attempt={attempt+1}")
+        except subprocess.TimeoutExpired:
+            _log(f"HERMES TIMEOUT attempt={attempt+1}")
+        except Exception as e:
+            _log(f"HERMES EXCEPTION attempt={attempt+1}: {e}")
 
     # 解析 Hermes 输出
     code = name = reason = ""
@@ -826,7 +827,17 @@ def main():
     print("=" * 50)
     _log('SERVER_START')
     db.reset_daily()
-    app.run(host='0.0.0.0', port=5128, debug=False)
+    ports = [5128, 5129, 5130]
+    for port in ports:
+        try:
+            app.run(host='0.0.0.0', port=port, debug=False)
+            break
+        except OSError as e:
+            print(f"端口 {port} 被占用，尝试下一个... ({e})", flush=True)
+            _log(f'PORT_{port}_CONFLICT')
+    else:
+        print("所有端口均被占用，无法启动", flush=True)
+        _log('SERVER_START_FAILED_ALL_PORTS')
 
 if __name__ == '__main__':
     main()
