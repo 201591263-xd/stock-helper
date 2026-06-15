@@ -9,7 +9,7 @@ class ApiClient:
         self.server_url = server_url.rstrip('/')
         self.username = username
 
-    def _post(self, path, data=None, timeout=10):
+    def _post(self, path, data=None, timeout=45):
         try:
             resp = requests.post(f'{self.server_url}{path}', json=data or {}, timeout=timeout)
             return resp.json()
