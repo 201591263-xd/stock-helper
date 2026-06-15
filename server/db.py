@@ -172,6 +172,19 @@ def get_buy_history(username: str = '', limit: int = 200):
     conn.close()
     return rows
 
+def get_recently_bought_codes(username: str, days: int = 3):
+    """返回最近N天内买入过的股票代码列表，用于排除推荐"""
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute('''
+        SELECT DISTINCT stock_code FROM buy_history
+        WHERE username = ?
+        AND buy_time >= datetime('now', 'localtime', ?)
+    ''', (username, f'-{days} days'))
+    codes = [r['stock_code'] for r in c.fetchall()]
+    conn.close()
+    return codes
+
 
 def get_buy_history_paginated(username: str = '', offset: int = 0, limit: int = 20):
     """分页买入历史，返回 (rows, total_count)"""

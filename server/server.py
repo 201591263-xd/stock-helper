@@ -262,6 +262,7 @@ def call_hermes(sector: str, exclude_codes: list, board_filter: str = '', pool=N
 2. 看弹性：高潮期优先中小盘弹性票，退潮期优先龙头/中盘防御
 3. 看分歧：优先当日有分歧（非缩量涨停）的票，避开一字板/秒板的一致股
 4. 避免重复：历史近期已多次推荐的票，优先换新的
+5. 【已买入三日不推】用户已买入的票三天内绝不推荐
 
 【核心原则】不要形成固定偏好。上周推过的龙头下周可能还是好票，上周推过的小票下周可能已经走坏。每次独立判断。
 
@@ -428,6 +429,11 @@ def chat():
 
     today_recs = db.get_today_recommendations()
     exclude_codes = [r['stock_code'] for r in today_recs]
+    # 已买入的票三天内不推
+    recently_bought = db.get_recently_bought_codes(username, days=3)
+    for code in recently_bought:
+        if code not in exclude_codes:
+            exclude_codes.append(code)
 
     # 解析用户输入的板块关键词（创业板/主板/科创板）
     board_filter = ''
@@ -721,6 +727,11 @@ def recommend():
 
     today_recs = db.get_today_recommendations()
     exclude_codes = [r['stock_code'] for r in today_recs]
+    # 已买入的票三天内不推
+    recently_bought = db.get_recently_bought_codes(username, days=3)
+    for code in recently_bought:
+        if code not in exclude_codes:
+            exclude_codes.append(code)
 
     # 解析用户输入的板块关键词（创业板/主板/科创板）
     board_filter = ''
