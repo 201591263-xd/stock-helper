@@ -275,6 +275,7 @@ def call_hermes(sector: str, exclude_codes: list, board_filter: str = '', pool=N
 
 【硬性约束（不可违反）】
 - 股价>100元不推
+- 推过的票两日不推
 - 已买入的票三日不推
 - 涨幅>7%不追高
 - 止损铁律：-5%无条件止损，次日低开>3%直接走
@@ -447,13 +448,10 @@ def chat():
             'type': 'text'
         })
 
-    today_recs = db.get_today_recommendations()
-    exclude_codes = [r['stock_code'] for r in today_recs]
-    # 已买入的票三天内不推
+    recently_pushed = db.get_recent_recommendations(days=2)
     recently_bought = db.get_recently_bought_codes(username, days=3)
-    for code in recently_bought:
-        if code not in exclude_codes:
-            exclude_codes.append(code)
+    exclude_codes = recently_pushed + [c for c in recently_bought if c not in recently_pushed]
+    # 推过的票两天不推，买入过的票三天不推
 
     # 解析用户输入的板块关键词（创业板/主板/科创板）
     board_filter = ''
@@ -745,13 +743,10 @@ def recommend():
             'stocks': []
         })
 
-    today_recs = db.get_today_recommendations()
-    exclude_codes = [r['stock_code'] for r in today_recs]
-    # 已买入的票三天内不推
+    recently_pushed = db.get_recent_recommendations(days=2)
     recently_bought = db.get_recently_bought_codes(username, days=3)
-    for code in recently_bought:
-        if code not in exclude_codes:
-            exclude_codes.append(code)
+    exclude_codes = recently_pushed + [c for c in recently_bought if c not in recently_pushed]
+    # 推过的票两天不推，买入过的票三天不推
 
     # 解析用户输入的板块关键词（创业板/主板/科创板）
     board_filter = ''

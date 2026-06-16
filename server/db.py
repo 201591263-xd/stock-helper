@@ -315,6 +315,18 @@ def get_today_recommendations(username: str = ''):
     conn.close()
     return rows
 
+def get_recent_recommendations(days: int = 2):
+    """返回最近N天内推荐过的股票代码列表（去重）"""
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute('''
+        SELECT DISTINCT stock_code FROM recommendations
+        WHERE recommend_date >= date('now','localtime',?)
+    ''', (f'-{days} days',))
+    codes = [r['stock_code'] for r in c.fetchall()]
+    conn.close()
+    return codes
+
 # ========== 反馈与胜率 ==========
 
 def record_feedback(stock_code: str, buy_price: float, current_price: float = 0, is_win: int = 0, note: str = ''):
