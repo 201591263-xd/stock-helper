@@ -866,7 +866,7 @@ def main():
     ports = [5128, 5129, 5130]
     for port in ports:
         try:
-            app.run(host='0.0.0.0', port=port, debug=False)
+            app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
             break
         except OSError as e:
             print(f"端口 {port} 被占用，尝试下一个... ({e})", flush=True)
